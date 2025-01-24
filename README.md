@@ -16,7 +16,7 @@ To be completely honest, I still don't know. The image below is a rough diagram 
 ![Excalidraw](./images/ticketsbot-2025-01-11T23_47_40_622Z.svg)
 The image above was made using [Excalidraw](https://excalidraw.com/).
 
-## Setup (Simple)
+## Setup
 
 1. Open a terminal in the folder you want to install the bot in. (Or create a folder and open a terminal in that folder)
 2. Clone this repository into that folder (`git clone https://github.com/DanPlayz0/ticketsbot-self-host-guide.git .`)
@@ -66,7 +66,7 @@ As this bot is self-hosted, you will need to configure the bot yourself. Here ar
    - Replace `${DISCORD_BOT_CLIENT_ID}` with your bot's application/client ID (e.g. `508391840525975553`)
 4. Go to the OAuth2 tab
 5. Add the redirect URL `${DASHBOARD_URL}/callback` to the OAuth2 redirect URIs
-   - Replace `${DASHBOARD_URL}` with the URL of your API (e.g. `http://localhost:8080`, make sure this matches what you set in the [Setup](#setup-simple) section)
+   - Replace `${DASHBOARD_URL}` with the URL of your API (e.g. `http://localhost:8080`, make sure this matches what you set in the [Setup](#setup) section)
 
 ## Registering the slash commands using Docker (Recommended)
 
@@ -135,31 +135,84 @@ As this bot is self-hosted, you will need to configure the bot yourself. Here ar
 
 ## Frequently Asked Questions
 
-1. What can I host this on?
+### 1. What can I host this on?
 
-   - You should be able to host this on any machine that can run Docker containers
+You should be able to host this on any machine that can run Docker containers
 
-2. What are the system requirements?
+### 2. What are the system requirements?
 
-   - I cannot recommend any specific requirements, but I can give you some information on the resources used by the bot (CPU metrics are out of 1200% as i was using a 6 core CPU with 12 logical processors):
-     - Starting up the bot the peak was around 475.44MB of RAM and 43.21% CPU. (This was on a fresh start, it may vary)
-     - After using the bot for a while, the bot was using around 1.5GB of RAM and 18% of a CPU.
+- I cannot recommend any specific requirements, but I can give you some information on the resources used by the bot (CPU metrics are out of 1200% as i was using a 6 core CPU with 12 logical processors):
+  - Starting up the bot the peak was around 475.44MB of RAM and 43.21% CPU. (This was on a fresh start, it may vary)
+  - After using the bot for a while, the bot was using around 1.5GB of RAM and 18% of a CPU.
 
-3. Can I turn off the logging?
+### 3. Can I turn off the logging?
 
-   - Kinda of, in certain containers there are environment variables, like the ones below which you can remove:
+Kinda of, in certain containers there are environment variables, like the ones below which you can remove:
 
-     ```yaml
-     RUST_BACKTRACE: 1
-     RUST_LOG: trace
-     ```
+```yaml
+RUST_BACKTRACE: 1
+RUST_LOG: trace
+```
 
-4. How do I update the bot?
-   - The docker compose uses a specific hash for the bot's containers, so you will have to manually find the new hash and update the `docker-compose.yaml` file.
-5. How do I get rid of the `ticketsbot.net` branding?
-   - If you have knowledge of how to compile GoLang, Rust, and Svelte, you can change the branding in the bot's [source code](https://github.com/TicketsBot) and recompile the bot and update those container hashes in `docker-compose.yaml` file and then re-run the bot.
-6. I want anyone to be able to use the dashboard, how do I do that?
-   - You gotta setup a reverse proxy (examples being; [NginX](https://nginx.org/), [Caddy](https://caddyserver.com/), [Traefik](https://traefik.io/traefik/)) with the following routes (assuming you are using the default ports from the compose file):
-     - `api.example.com` -> `http://localhost:8082` (api container)
-     - `dashboard.example.com` -> `http://localhost:5000` (dashboard container)
-     - `gateway.example.com` -> `http://localhost:8080` (http-gateway container)
+### 4. How do I update the bot?
+
+There are environment variables used in the `docker-compose.yaml` file that allows you to change which image the bot runs on. The current `docker-compose.yaml` file already using the latest images of the bot's containers.
+
+You might be able to find a newer image in the respective repositories/packages on the [TicketsBot Packages](https://github.com/orgs/TicketsBot/packages) page but it's highly unlikely.
+
+Therefore, you will have to fork the respective repositories, compile and update the `docker-compose.yaml` or `.env` to those compiled images.
+
+### 5. How do I get rid of the `ticketsbot.net` branding?
+
+If you have knowledge of how to compile GoLang, Rust, and Svelte, you can change the branding in the bot's [source code](https://github.com/TicketsBot) and recompile the bot and update those container hashes in `docker-compose.yaml` file and then re-run the bot.
+
+### 6. I want anyone to be able to use the dashboard, how do I do that?
+
+You have to setup a reverse proxy (examples being; [NginX](https://nginx.org/), [Caddy](https://caddyserver.com/), [Traefik](https://traefik.io/traefik/)) with the following routes (assuming you are using the default ports from the compose file)
+
+- `api.example.com` -> `http://localhost:8082` (api container)
+- `dashboard.example.com` -> `http://localhost:5000` (dashboard container)
+- `gateway.example.com` -> `http://localhost:8080` (http-gateway container)
+
+### 7. This requires S3, can I host this without S3?
+
+Yes you can but know this bot requires an S3 bucket to store transcripts. You can use [MinIO](https://min.io/) to create a local S3 bucket.
+
+If you really don't want to use S3, you will have to edit the `docker-compose.yaml` file.
+
+> :warning: This will cause the bot to break! As the bot requires the S3 bucket to store transcripts.
+
+Here are the steps to remove S3 and transcripts.
+
+1. Remove the `logarchiver` and `postgres-archive` entries
+2. In the `worker-interactions` service, remove the two environment variables that reference the archiver (aka `WORKER_ARCHIVER_URL` and `WORKER_ARCHIVER_AES_KEY`).
+3. In the `api` service, remove the two environment variables that reference the archiver (aka `LOG_ARCHIVER_URL` and `LOG_AES_KEY`).
+
+Once you've done that, you will also have to open the dashboard and disable "Store Ticket Transcripts" in the settings of every server the bot is setup in, otherwise you won't be able to close tickets.
+
+## Common Issues
+
+### There's an error. (`no active bucket`)
+
+This error is caused by you skipping step #4 in the [Setup](#setup) section. You need to add the bucket to the database before starting the bot.
+
+To fix this error you will either need to either:
+
+1. Delete the `pgarchivedata` folder and restart with an updated `init-archive.sql` file.
+2. Run the following SQL command in the `pgarchivedata` database (and replace the placeholders with your bucket name and S3 endpoint):
+
+   ```sql
+   INSERT INTO buckets (id, endpoint_url, name, active) VALUES ('b77cc1a0-91ec-4d64-bb6d-21717737ea3c', 'https://${S3_ENDPOINT}', '${BUCKET_NAME}', TRUE);
+   ```
+
+### I got an error while setting the interactions url. (`The specified interactions endpoint url could not be verified.`)
+
+The most common error is that the URL you inputted is not publicly accessible (aka you tried `localhost` or [a private IP Address](https://en.wikipedia.org/wiki/Private_network)). 
+**You need to have a publicly accessible URL for the interactions endpoint.** Refer to [FAQ #6](#6-i-want-anyone-to-be-able-to-use-the-dashboard-how-do-i-do-that) for more information on a reverse proxy setup.
+
+### Invalid OAuth2 redirect_uri
+
+> :warning: If you set up a reverse proxy, you should use the dashboard domain you set instead of `localhost`.
+
+This error is caused by you not setting the OAuth2 redirect URI in the [Discord Bot Configuration](#discord-bot-configuration) section. You need to set the redirect URI to `${DASHBOARD_URL}/callback`. Replace `${DASHBOARD_URL}` with the URL of your dashboard (e.g. `http://localhost:5000`). 
+

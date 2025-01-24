@@ -192,7 +192,7 @@ Once you've done that, you will also have to open the dashboard and disable "Sto
 
 ## Common Issues
 
-### There's an error. (`no active bucket`)
+### 1. There's an error. (`no active bucket`)
 
 This error is caused by you skipping step #4 in the [Setup](#setup) section. You need to add the bucket to the database before starting the bot.
 
@@ -205,12 +205,12 @@ To fix this error you will either need to either:
    INSERT INTO buckets (id, endpoint_url, name, active) VALUES ('b77cc1a0-91ec-4d64-bb6d-21717737ea3c', 'https://${S3_ENDPOINT}', '${BUCKET_NAME}', TRUE);
    ```
 
-### I got an error while setting the interactions url. (`The specified interactions endpoint url could not be verified.`)
+### 2. I got an error while setting the interactions url. (`The specified interactions endpoint url could not be verified.`)
 
 The most common error is that the URL you inputted is not publicly accessible (aka you tried `localhost` or [a private IP Address](https://en.wikipedia.org/wiki/Private_network)). 
 **You need to have a publicly accessible URL for the interactions endpoint.** Refer to [FAQ #6](#6-i-want-anyone-to-be-able-to-use-the-dashboard-how-do-i-do-that) for more information on a reverse proxy setup.
 
-### Invalid OAuth2 redirect_uri
+### 3. Invalid OAuth2 redirect_uri
 
 > :warning: If you set up a reverse proxy, you should use the dashboard domain you set instead of `localhost`.
 

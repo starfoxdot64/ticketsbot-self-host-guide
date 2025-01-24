@@ -141,9 +141,10 @@ You should be able to host this on any machine that can run Docker containers
 
 ### 2. What are the system requirements?
 
-- I cannot recommend any specific requirements, but I can give you some information on the resources used by the bot (CPU metrics are out of 1200% as i was using a 6 core CPU with 12 logical processors):
-  - Starting up the bot the peak was around 475.44MB of RAM and 43.21% CPU. (This was on a fresh start, it may vary)
-  - After using the bot for a while, the bot was using around 1.5GB of RAM and 18% of a CPU.
+I cannot recommend any specific requirements, but I can give you some information on the resources used by the bot (CPU metrics are out of 1200% as i was using a 6 core CPU with 12 logical processors):
+
+- Starting up the bot the peak was around 475.44MB of RAM and 43.21% CPU. (This was on a fresh start, it may vary)
+- After using the bot for a while, the bot was using around 1.5GB of RAM and 18% of a CPU.
 
 ### 3. Can I turn off the logging?
 
